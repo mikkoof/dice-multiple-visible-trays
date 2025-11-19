@@ -40,7 +40,7 @@ export function PopoverTray({
     if (finishedRolling) {
       const timeout = setTimeout(() => {
         setTimedOut(true);
-      }, 5000);
+      }, 60000);
       return () => {
         clearTimeout(timeout);
       };
@@ -64,7 +64,7 @@ export function PopoverTray({
   }
 
   return (
-    <Box component="div" position="absolute" right={16} bottom={16}>
+    <Box component="div" position="relative" sx={{ pointerEvents: "all" }}>
       <Slide
         in={shown}
         onExited={() => onToggle(player.connectionId, false)}

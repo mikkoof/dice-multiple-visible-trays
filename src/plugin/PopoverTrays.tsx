@@ -2,6 +2,7 @@ import OBR, { Player } from "@owlbear-rodeo/sdk";
 import { useEffect, useState } from "react";
 
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 
 import { PopoverTray } from "./PopoverTray";
 import { getPluginId } from "./getPluginId";
@@ -51,10 +52,10 @@ export function PopoverTrays() {
     } else {
       // Height = Tray + Name + Bottom
       OBR.popover.setHeight(getPluginId("popover"), 298);
-      // Width = Tray + Right
-      OBR.popover.setWidth(getPluginId("popover"), 266);
+      // Width = (Tray + Right) * Number of trays
+      OBR.popover.setWidth(getPluginId("popover"), 266 * visibleTrays.length);
     }
-  }, [hidden]);
+  }, [hidden, visibleTrays.length]);
 
   return (
     <Box
@@ -65,15 +66,25 @@ export function PopoverTrays() {
       right="0"
       top="0"
       overflow="hidden"
+      p={2}
+      sx={{ pointerEvents: "none" }}
     >
-      {players.map((player) => (
-        <PopoverTray
-          key={player.connectionId}
-          player={player}
-          onToggle={handleTrayToggle}
-          onOpen={handleTrayOpen}
-        />
-      ))}
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="flex-end"
+        alignItems="flex-end"
+        height="100%"
+      >
+        {players.map((player) => (
+          <PopoverTray
+            key={player.connectionId}
+            player={player}
+            onToggle={handleTrayToggle}
+            onOpen={handleTrayOpen}
+          />
+        ))}
+      </Stack>
     </Box>
   );
 }
