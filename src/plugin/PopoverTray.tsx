@@ -45,51 +45,50 @@ export function PopoverTray({
   return (
     <Box component="div" position="relative" sx={{ pointerEvents: "all" }}>
       <Slide in={shown} direction="up">
-        <Box position="relative">
-          <ButtonBase onClick={onClick}>
-            <Paper
-              elevation={8}
+        <Paper
+          elevation={8}
+          sx={{
+            width: "250px",
+            height: "282px",
+            borderRadius: 2,
+            overflow: "hidden",
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(34, 38, 57, 0.8)"
+                : "rgba(255, 255, 255, 0.4)",
+            position: "relative",
+          }}
+        >
+          <ButtonBase onClick={onClick} sx={{ width: "100%", height: "100%" }}>
+            <Box component="div" height="250px" width="250px">
+              <TraySuspense>
+                <Canvas frameloop="demand">
+                  <AudioListenerProvider volume={0.25}>
+                    <Environment files={environment} />
+                    <Tray />
+                    <PlayerDiceRoll player={player} />
+                    <AnimatedPlayerCamera
+                      rollTransforms={
+                        finishedRolling ? finishedRollTransforms : undefined
+                      }
+                    />
+                  </AudioListenerProvider>
+                </Canvas>
+              </TraySuspense>
+            </Box>
+            <Typography
+              variant="subtitle1"
+              color="text.secondary"
+              textAlign="center"
+              lineHeight="32px"
               sx={{
-                width: "250px",
-                height: "282px",
-                borderRadius: 2,
-                overflow: "hidden",
-                backgroundColor:
-                  theme.palette.mode === "dark"
-                    ? "rgba(34, 38, 57, 0.8)"
-                    : "rgba(255, 255, 255, 0.4)",
+                bgcolor: "background.default",
               }}
+              noWrap
             >
-              <Box component="div" height="250px" width="250px">
-                <TraySuspense>
-                  <Canvas frameloop="demand">
-                    <AudioListenerProvider volume={0.25}>
-                      <Environment files={environment} />
-                      <Tray />
-                      <PlayerDiceRoll player={player} />
-                      <AnimatedPlayerCamera
-                        rollTransforms={
-                          finishedRolling ? finishedRollTransforms : undefined
-                        }
-                      />
-                    </AudioListenerProvider>
-                  </Canvas>
-                </TraySuspense>
-              </Box>
-              <Typography
-                variant="subtitle1"
-                color="text.secondary"
-                textAlign="center"
-                lineHeight="32px"
-                sx={{
-                  bgcolor: "background.default",
-                }}
-                noWrap
-              >
-                {player?.name}
-                {finishedRolling && <span> | {finalValue}</span>}
-              </Typography>
-            </Paper>
+              {player?.name}
+              {finishedRolling && <span> | {finalValue}</span>}
+            </Typography>
           </ButtonBase>
           <IconButton
             onClick={onPin}
@@ -97,7 +96,7 @@ export function PopoverTray({
           >
             {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
           </IconButton>
-        </Box>
+        </Paper>
       </Slide>
     </Box>
   );
