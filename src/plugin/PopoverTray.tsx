@@ -1,7 +1,6 @@
 import { Environment } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Player } from "@owlbear-rodeo/sdk";
-import { useEffect, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
@@ -11,66 +10,34 @@ import Paper from "@mui/material/Paper";
 import ButtonBase from "@mui/material/ButtonBase";
 
 import environment from "../environment.hdr";
-import { usePlayerDice } from "./usePlayerDice";
 import { PlayerDiceRoll } from "./PlayerDiceRoll";
 import { AudioListenerProvider } from "../audio/AudioListenerProvider";
 import { Tray } from "../tray/Tray";
 import { TraySuspense } from "../tray/TraySuspense";
 import { AnimatedPlayerCamera } from "./AnimatedPlayerCamera";
+import { DiceTransform } from "../types/DiceTransform";
 
 export function PopoverTray({
   player,
-  onToggle,
-  onOpen,
+  shown,
+  onClick,
+  finalValue,
+  finishedRolling,
+  finishedRollTransforms,
 }: {
   player: Player;
-  onToggle: (connectionId: string, show: boolean) => void;
-  onOpen: (connectionId: string) => void;
+  shown: boolean;
+  onClick: () => void;
+  finalValue: number | null;
+  finishedRolling: boolean;
+  finishedRollTransforms?: Record<string, DiceTransform>;
 }) {
-  const { diceRoll, finalValue, finishedRolling, finishedRollTransforms } =
-    usePlayerDice(player);
-
   const theme = useTheme();
-
-  const hidden = !diceRoll || diceRoll.hidden;
-
-  const [timedOut, setTimedOut] = useState(finishedRolling);
-
-  useEffect(() => {
-    if (finishedRolling) {
-      const timeout = setTimeout(() => {
-        setTimedOut(true);
-      }, 60000);
-      return () => {
-        clearTimeout(timeout);
-      };
-    } else {
-      setTimedOut(false);
-    }
-  }, [finishedRolling]);
-
-  const shown = !hidden && !timedOut;
-  useEffect(() => {
-    if (shown) {
-      onToggle(player.connectionId, true);
-    }
-  }, [shown]);
-
-  function handleClick() {
-    if (shown) {
-      setTimedOut(true);
-      onOpen(player.connectionId);
-    }
-  }
 
   return (
     <Box component="div" position="relative" sx={{ pointerEvents: "all" }}>
-      <Slide
-        in={shown}
-        onExited={() => onToggle(player.connectionId, false)}
-        direction="up"
-      >
-        <ButtonBase onClick={handleClick}>
+      <Slide in={shown} direction="up">
+        <ButtonBase onClick={onClick}>
           <Paper
             elevation={8}
             sx={{

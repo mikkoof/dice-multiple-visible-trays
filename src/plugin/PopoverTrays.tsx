@@ -1,38 +1,75 @@
 import OBR, { Player } from "@owlbear-rodeo/sdk";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 
 import { PopoverTray } from "./PopoverTray";
 import { getPluginId } from "./getPluginId";
+import { usePlayerDice } from "./usePlayerDice";
+
+function MemoizedPopoverTray({
+  player,
+  onOpen,
+  onVisibilityChange,
+}: {
+  player: Player;
+  onOpen: (connectionId: string) => void;
+  onVisibilityChange: (visibile: boolean) => void;
+}) {
+  const { diceRoll, finalValue, finishedRolling, finishedRollTransforms } =
+    usePlayerDice(player);
+
+  const [timedOut, setTimedOut] = useState(finishedRolling);
+
+  useEffect(() => {
+    if (finishedRolling) {
+      const timeout = setTimeout(() => {
+        setTimedOut(true);
+      }, 60000);
+      return () => {
+        clearTimeout(timeout);
+      };
+    } else {
+      setTimedOut(false);
+    }
+  }, [finishedRolling]);
+
+  const shown = !(!diceRoll || diceRoll.hidden) && !timedOut;
+
+  useEffect(() => {
+    onVisibilityChange(shown);
+  }, [shown]);
+
+  function handleClick() {
+    if (shown) {
+      setTimedOut(true);
+      onOpen(player.connectionId);
+    }
+  }
+
+  return (
+    <PopoverTray
+      player={player}
+      shown={shown}
+      onClick={handleClick}
+      finalValue={finalValue}
+      finishedRolling={finishedRolling}
+      finishedRollTransforms={finishedRollTransforms}
+    />
+  );
+}
+
+const MemoPopoverTray = memo(MemoizedPopoverTray);
 
 export function PopoverTrays() {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [visibleTrays, setVisibleTrays] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     OBR.party.getPlayers().then(setPlayers);
   }, []);
   useEffect(() => OBR.party.onChange(setPlayers), []);
-
-  const [visibleTrays, setVisibleTrays] = useState<string[]>([]);
-
-  useEffect(() => {
-    const playerIds = players.map((p) => p.connectionId);
-    setVisibleTrays((visible) =>
-      visible.filter((id) => playerIds.includes(id))
-    );
-  }, [players]);
-
-  function handleTrayToggle(connectionId: string, shown: boolean) {
-    if (shown) {
-      setVisibleTrays((visible) =>
-        visible.includes(connectionId) ? visible : [...visible, connectionId]
-      );
-    } else {
-      setVisibleTrays((visible) => visible.filter((id) => id !== connectionId));
-    }
-  }
 
   function handleTrayOpen(connectionId: string) {
     if (window.BroadcastChannel) {
@@ -44,9 +81,9 @@ export function PopoverTrays() {
   }
 
   // Hide popover when no trays are visible
-  const hidden = visibleTrays.length === 0;
   useEffect(() => {
-    if (hidden) {
+    const visibleCount = Object.values(visibleTrays).filter(Boolean).length;
+    if (visibleCount === 0) {
       OBR.popover.setHeight(getPluginId("popover"), 0);
       OBR.popover.setWidth(getPluginId("popover"), 0);
     } else {
@@ -55,10 +92,14 @@ export function PopoverTrays() {
       // Width = (Tray * Number of trays) + (Spacing * (Number of trays - 1)) + (Padding * 2)
       OBR.popover.setWidth(
         getPluginId("popover"),
-        250 * visibleTrays.length + 16 * (visibleTrays.length - 1) + 16 * 2
+        250 * visibleCount + 16 * (visibleCount - 1) + 16 * 2
       );
     }
-  }, [hidden, visibleTrays.length]);
+  }, [visibleTrays]);
+
+  function handleVisibilityChange(connectionId: string, visible: boolean) {
+    setVisibleTrays((v) => ({ ...v, [connectionId]: visible }));
+  }
 
   return (
     <Box
@@ -80,11 +121,13 @@ export function PopoverTrays() {
         height="100%"
       >
         {players.map((player) => (
-          <PopoverTray
+          <MemoPopoverTray
             key={player.connectionId}
             player={player}
-            onToggle={handleTrayToggle}
             onOpen={handleTrayOpen}
+            onVisibilityChange={(visible) =>
+              handleVisibilityChange(player.connectionId, visible)
+            }
           />
         ))}
       </Stack>
