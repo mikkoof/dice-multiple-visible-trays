@@ -30,7 +30,7 @@ function MemoizedPopoverTray({
     if (finishedRolling && !pinned) {
       const timeout = setTimeout(() => {
         setTimedOut(true);
-      }, 60000);
+      }, 15000);
       return () => {
         clearTimeout(timeout);
       };
