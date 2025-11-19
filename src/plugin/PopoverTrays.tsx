@@ -52,8 +52,11 @@ export function PopoverTrays() {
     } else {
       // Height = Tray + Name + Bottom
       OBR.popover.setHeight(getPluginId("popover"), 298);
-      // Width = (Tray + Right) * Number of trays
-      OBR.popover.setWidth(getPluginId("popover"), 266 * visibleTrays.length);
+      // Width = (Tray * Number of trays) + (Spacing * (Number of trays - 1)) + (Padding * 2)
+      OBR.popover.setWidth(
+        getPluginId("popover"),
+        250 * visibleTrays.length + 16 * (visibleTrays.length - 1) + 16 * 2
+      );
     }
   }, [hidden, visibleTrays.length]);
 
