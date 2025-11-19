@@ -8,6 +8,10 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import ButtonBase from "@mui/material/ButtonBase";
+import IconButton from "@mui/material/IconButton";
+
+import PushPinIcon from "@mui/icons-material/PushPin";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 
 import environment from "../environment.hdr";
 import { PlayerDiceRoll } from "./PlayerDiceRoll";
@@ -24,6 +28,8 @@ export function PopoverTray({
   finalValue,
   finishedRolling,
   finishedRollTransforms,
+  onPin,
+  pinned,
 }: {
   player: Player;
   shown: boolean;
@@ -31,26 +37,29 @@ export function PopoverTray({
   finalValue: number | null;
   finishedRolling: boolean;
   finishedRollTransforms?: Record<string, DiceTransform>;
+  onPin: () => void;
+  pinned: boolean;
 }) {
   const theme = useTheme();
 
   return (
     <Box component="div" position="relative" sx={{ pointerEvents: "all" }}>
       <Slide in={shown} direction="up">
-        <ButtonBase onClick={onClick}>
-          <Paper
-            elevation={8}
-            sx={{
-              width: "250px",
-              height: "282px",
-              borderRadius: 2,
-              overflow: "hidden",
-              backgroundColor:
-                theme.palette.mode === "dark"
-                  ? "rgba(34, 38, 57, 0.8)"
-                  : "rgba(255, 255, 255, 0.4)",
-            }}
-          >
+        <Paper
+          elevation={8}
+          sx={{
+            width: "250px",
+            height: "282px",
+            borderRadius: 2,
+            overflow: "hidden",
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(34, 38, 57, 0.8)"
+                : "rgba(255, 255, 255, 0.4)",
+            position: "relative",
+          }}
+        >
+          <ButtonBase onClick={onClick} sx={{ width: "100%", height: "100%" }}>
             <Box component="div" height="250px" width="250px">
               <TraySuspense>
                 <Canvas frameloop="demand">
@@ -80,8 +89,14 @@ export function PopoverTray({
               {player?.name}
               {finishedRolling && <span> | {finalValue}</span>}
             </Typography>
-          </Paper>
-        </ButtonBase>
+          </ButtonBase>
+          <IconButton
+            onClick={onPin}
+            sx={{ position: "absolute", top: 0, right: 0 }}
+          >
+            {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+          </IconButton>
+        </Paper>
       </Slide>
     </Box>
   );
