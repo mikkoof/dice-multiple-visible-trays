@@ -59,7 +59,14 @@ export function PopoverTray({
             position: "relative",
           }}
         >
-          <ButtonBase onClick={onClick} sx={{ width: "100%", height: "100%" }}>
+          <ButtonBase
+            onClick={onClick}
+            sx={{
+              width: "100%",
+              height: "100%",
+              flexDirection: "column",
+            }}
+          >
             <Box component="div" height="250px" width="250px">
               <TraySuspense>
                 <Canvas frameloop="demand">
