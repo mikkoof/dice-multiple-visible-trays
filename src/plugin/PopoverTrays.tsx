@@ -12,10 +12,14 @@ function MemoizedPopoverTray({
   player,
   onOpen,
   onVisibilityChange,
+  onPin,
+  pinned,
 }: {
   player: Player;
   onOpen: (connectionId: string) => void;
   onVisibilityChange: (visibile: boolean) => void;
+  onPin: () => void;
+  pinned: boolean;
 }) {
   const { diceRoll, finalValue, finishedRolling, finishedRollTransforms } =
     usePlayerDice(player);
@@ -23,7 +27,7 @@ function MemoizedPopoverTray({
   const [timedOut, setTimedOut] = useState(finishedRolling);
 
   useEffect(() => {
-    if (finishedRolling) {
+    if (finishedRolling && !pinned) {
       const timeout = setTimeout(() => {
         setTimedOut(true);
       }, 60000);
@@ -33,7 +37,7 @@ function MemoizedPopoverTray({
     } else {
       setTimedOut(false);
     }
-  }, [finishedRolling]);
+  }, [finishedRolling, pinned]);
 
   const shown = !(!diceRoll || diceRoll.hidden) && !timedOut;
 
@@ -56,6 +60,8 @@ function MemoizedPopoverTray({
       finalValue={finalValue}
       finishedRolling={finishedRolling}
       finishedRollTransforms={finishedRollTransforms}
+      onPin={onPin}
+      pinned={pinned}
     />
   );
 }
@@ -65,6 +71,7 @@ const MemoPopoverTray = memo(MemoizedPopoverTray);
 export function PopoverTrays() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [visibleTrays, setVisibleTrays] = useState<Record<string, boolean>>({});
+  const [pinnedTrays, setPinnedTrays] = useState<string[]>([]);
 
   useEffect(() => {
     OBR.party.getPlayers().then(setPlayers);
@@ -101,6 +108,16 @@ export function PopoverTrays() {
     setVisibleTrays((v) => ({ ...v, [connectionId]: visible }));
   }
 
+  function handlePin(connectionId: string) {
+    setPinnedTrays((pinned) => {
+      if (pinned.includes(connectionId)) {
+        return pinned.filter((id) => id !== connectionId);
+      } else {
+        return [...pinned, connectionId];
+      }
+    });
+  }
+
   return (
     <Box
       component="div"
@@ -128,6 +145,8 @@ export function PopoverTrays() {
             onVisibilityChange={(visible) =>
               handleVisibilityChange(player.connectionId, visible)
             }
+            onPin={() => handlePin(player.connectionId)}
+            pinned={pinnedTrays.includes(player.connectionId)}
           />
         ))}
       </Stack>
