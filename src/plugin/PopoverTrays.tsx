@@ -24,40 +24,29 @@ function MemoizedPopoverTray({
   const { diceRoll, finalValue, finishedRolling, finishedRollTransforms } =
     usePlayerDice(player);
 
-  const [timedOut, setTimedOut] = useState(false);
-  const [hasActiveRoll, setHasActiveRoll] = useState(false);
-  const [activeRollTimestamp, setActiveRollTimestamp] = useState<number | null>(
-    null
+  const [hideAfter, setHideAfter] = useState<number | null>(null);
+
+  // When a roll finishes, set when it should hide
+  useEffect(() => {
+    if (diceRoll && !diceRoll.hidden && finishedRolling && !pinned) {
+      setHideAfter(Date.now() + 15000);
+    }
+  }, [diceRoll, finishedRolling, pinned]);
+
+  // Reset hide timer when unpinned while visible
+  useEffect(() => {
+    if (!pinned && diceRoll && !diceRoll.hidden && finishedRolling) {
+      setHideAfter(Date.now() + 15000);
+    }
+  }, [pinned, diceRoll, finishedRolling]);
+
+  // Show if there's a roll and either: it's pinned, or we haven't reached hide time yet
+  const now = Date.now();
+  const shown = !!(
+    diceRoll &&
+    !diceRoll.hidden &&
+    (pinned || !hideAfter || now < hideAfter)
   );
-
-  // Track when a roll becomes active (not hidden and present)
-  useEffect(() => {
-    if (diceRoll && !diceRoll.hidden) {
-      const timestamp = Date.now();
-      setHasActiveRoll(true);
-      setTimedOut(false);
-      setActiveRollTimestamp(timestamp);
-    }
-  }, [diceRoll]);
-
-  useEffect(() => {
-    if (finishedRolling && hasActiveRoll && !pinned && activeRollTimestamp) {
-      const currentTimestamp = activeRollTimestamp;
-      const timeout = setTimeout(() => {
-        // Only timeout if this is still the same roll
-        if (activeRollTimestamp === currentTimestamp) {
-          setTimedOut(true);
-          setHasActiveRoll(false);
-        }
-      }, 15000);
-      return () => {
-        clearTimeout(timeout);
-      };
-    }
-  }, [finishedRolling, hasActiveRoll, pinned, activeRollTimestamp]);
-
-  // Show tray if there's an active roll, it hasn't timed out, and diceRoll exists
-  const shown = hasActiveRoll && !timedOut && !!diceRoll;
 
   useEffect(() => {
     onVisibilityChange(shown);
@@ -65,7 +54,7 @@ function MemoizedPopoverTray({
 
   function handleClick() {
     if (shown) {
-      setTimedOut(true);
+      setHideAfter(Date.now()); // Hide immediately
       onOpen(player.connectionId);
     }
   }
