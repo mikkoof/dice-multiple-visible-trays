@@ -1,5 +1,5 @@
 import OBR, { Player } from "@owlbear-rodeo/sdk";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -52,7 +52,7 @@ function MemoizedPopoverTray({
 
   useEffect(() => {
     onVisibilityChange(shown);
-  }, [shown]);
+  }, [shown, onVisibilityChange]);
 
   function handleClick() {
     if (shown) {
@@ -75,12 +75,7 @@ function MemoizedPopoverTray({
   );
 }
 
-const MemoPopoverTray = memo(
-  MemoizedPopoverTray,
-  (prevProps, nextProps) =>
-    prevProps.player.connectionId === nextProps.player.connectionId &&
-    prevProps.pinned === nextProps.pinned
-);
+const MemoPopoverTray = memo(MemoizedPopoverTray);
 
 export function PopoverTrays() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -123,9 +118,12 @@ export function PopoverTrays() {
     return () => clearTimeout(timeout);
   }, [visibleTrays]);
 
-  function handleVisibilityChange(connectionId: string, visible: boolean) {
-    setVisibleTrays((v) => ({ ...v, [connectionId]: visible }));
-  }
+  const handleVisibilityChange = useCallback(
+    (connectionId: string, visible: boolean) => {
+      setVisibleTrays((v) => ({ ...v, [connectionId]: visible }));
+    },
+    []
+  );
 
   function handlePin(connectionId: string) {
     setPinnedTrays((pinned) => {
