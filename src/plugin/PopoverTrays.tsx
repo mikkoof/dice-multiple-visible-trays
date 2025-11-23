@@ -75,7 +75,12 @@ function MemoizedPopoverTray({
   );
 }
 
-const MemoPopoverTray = memo(MemoizedPopoverTray);
+const MemoPopoverTray = memo(
+  MemoizedPopoverTray,
+  (prevProps, nextProps) =>
+    prevProps.player.connectionId === nextProps.player.connectionId &&
+    prevProps.pinned === nextProps.pinned
+);
 
 export function PopoverTrays() {
   const [players, setPlayers] = useState<Player[]>([]);
