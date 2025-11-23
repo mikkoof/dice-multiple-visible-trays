@@ -88,31 +88,30 @@ export function PopoverTrays() {
     }
   }
 
-  // Hide popover when no trays are visible
-  useEffect(() => {
-    // Defer sizing to allow all visibility changes to be batched
-    const timeout = setTimeout(() => {
-      const visibleCount = Object.values(visibleTrays).filter(Boolean).length;
-      if (visibleCount === 0) {
-        OBR.popover.setHeight(getPluginId("popover"), 0);
-        OBR.popover.setWidth(getPluginId("popover"), 0);
-      } else {
-        // Height = Tray + Name + Bottom
-        OBR.popover.setHeight(getPluginId("popover"), 298);
-        // Width = (Tray * Number of trays) + (Spacing * (Number of trays - 1)) + (Padding * 2)
-        OBR.popover.setWidth(
-          getPluginId("popover"),
-          250 * visibleCount + 16 * (visibleCount - 1) + 16 * 2
-        );
-      }
-    }, 50);
+  // Update popover size based on visible trays
+  const visibleCount = Object.values(visibleTrays).filter(Boolean).length;
 
-    return () => clearTimeout(timeout);
-  }, [visibleTrays]);
+  useEffect(() => {
+    if (visibleCount === 0) {
+      OBR.popover.setHeight(getPluginId("popover"), 0);
+      OBR.popover.setWidth(getPluginId("popover"), 0);
+    } else {
+      // Height = Tray + Name + Bottom
+      OBR.popover.setHeight(getPluginId("popover"), 298);
+      // Width = (Tray * Number of trays) + (Spacing * (Number of trays - 1)) + (Padding * 2)
+      OBR.popover.setWidth(
+        getPluginId("popover"),
+        250 * visibleCount + 16 * (visibleCount - 1) + 16 * 2
+      );
+    }
+  }, [visibleCount]);
 
   const handleVisibilityChange = useCallback(
     (connectionId: string, visible: boolean) => {
-      setVisibleTrays((v) => ({ ...v, [connectionId]: visible }));
+      setVisibleTrays((v) => {
+        const newValue = { ...v, [connectionId]: visible };
+        return newValue;
+      });
     },
     []
   );
