@@ -25,6 +25,14 @@ function MemoizedPopoverTray({
     usePlayerDice(player);
 
   const [timedOut, setTimedOut] = useState(finishedRolling);
+  const [hasEverRolled, setHasEverRolled] = useState(false);
+
+  // Track if this player has ever rolled
+  useEffect(() => {
+    if (diceRoll && !diceRoll.hidden) {
+      setHasEverRolled(true);
+    }
+  }, [diceRoll]);
 
   useEffect(() => {
     if (finishedRolling && !pinned) {
@@ -34,12 +42,13 @@ function MemoizedPopoverTray({
       return () => {
         clearTimeout(timeout);
       };
-    } else {
+    } else if (!finishedRolling) {
       setTimedOut(false);
     }
   }, [finishedRolling, pinned]);
 
-  const shown = !!diceRoll && !diceRoll.hidden && !timedOut;
+  // Keep tray visible if pinned or if it has rolled and not timed out
+  const shown = hasEverRolled && !timedOut && !diceRoll?.hidden;
 
   useEffect(() => {
     onVisibilityChange(shown);
