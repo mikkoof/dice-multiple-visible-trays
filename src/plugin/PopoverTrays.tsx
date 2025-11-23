@@ -89,19 +89,24 @@ export function PopoverTrays() {
 
   // Hide popover when no trays are visible
   useEffect(() => {
-    const visibleCount = Object.values(visibleTrays).filter(Boolean).length;
-    if (visibleCount === 0) {
-      OBR.popover.setHeight(getPluginId("popover"), 0);
-      OBR.popover.setWidth(getPluginId("popover"), 0);
-    } else {
-      // Height = Tray + Name + Bottom
-      OBR.popover.setHeight(getPluginId("popover"), 298);
-      // Width = (Tray * Number of trays) + (Spacing * (Number of trays - 1)) + (Padding * 2)
-      OBR.popover.setWidth(
-        getPluginId("popover"),
-        250 * visibleCount + 16 * (visibleCount - 1) + 16 * 2
-      );
-    }
+    // Defer sizing to allow all visibility changes to be batched
+    const timeout = setTimeout(() => {
+      const visibleCount = Object.values(visibleTrays).filter(Boolean).length;
+      if (visibleCount === 0) {
+        OBR.popover.setHeight(getPluginId("popover"), 0);
+        OBR.popover.setWidth(getPluginId("popover"), 0);
+      } else {
+        // Height = Tray + Name + Bottom
+        OBR.popover.setHeight(getPluginId("popover"), 298);
+        // Width = (Tray * Number of trays) + (Spacing * (Number of trays - 1)) + (Padding * 2)
+        OBR.popover.setWidth(
+          getPluginId("popover"),
+          250 * visibleCount + 16 * (visibleCount - 1) + 16 * 2
+        );
+      }
+    }, 50);
+
+    return () => clearTimeout(timeout);
   }, [visibleTrays]);
 
   function handleVisibilityChange(connectionId: string, visible: boolean) {
