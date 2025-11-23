@@ -39,7 +39,7 @@ function MemoizedPopoverTray({
     }
   }, [finishedRolling, pinned]);
 
-  const shown = !(!diceRoll || diceRoll.hidden) && !timedOut;
+  const shown = !!diceRoll && !diceRoll.hidden && !timedOut;
 
   useEffect(() => {
     onVisibilityChange(shown);
