@@ -24,7 +24,7 @@ function MemoizedPopoverTray({
   const { diceRoll, finalValue, finishedRolling, finishedRollTransforms } =
     usePlayerDice(player);
 
-  const [timedOut, setTimedOut] = useState(finishedRolling);
+  const [timedOut, setTimedOut] = useState(false);
   const [hasEverRolled, setHasEverRolled] = useState(false);
 
   // Track if this player has ever rolled
@@ -42,7 +42,7 @@ function MemoizedPopoverTray({
       return () => {
         clearTimeout(timeout);
       };
-    } else if (!finishedRolling) {
+    } else if (!finishedRolling && !pinned) {
       setTimedOut(false);
     }
   }, [finishedRolling, pinned]);
