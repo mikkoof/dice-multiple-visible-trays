@@ -10,13 +10,11 @@ import { usePlayerDice } from "./usePlayerDice";
 
 function MemoizedPopoverTray({
   player,
-  onOpen,
   onVisibilityChange,
   onPin,
   pinned,
 }: {
   player: Player;
-  onOpen: (connectionId: string) => void;
   onVisibilityChange: (visibile: boolean) => void;
   onPin: () => void;
   pinned: boolean;
@@ -52,18 +50,11 @@ function MemoizedPopoverTray({
     onVisibilityChange(shown);
   }, [shown, onVisibilityChange]);
 
-  function handleClick() {
-    if (shown) {
-      setHideAfter(Date.now()); // Hide immediately
-      onOpen(player.connectionId);
-    }
-  }
-
   return (
     <PopoverTray
       player={player}
       shown={shown}
-      onClick={handleClick}
+      onClick={() => {}}
       finalValue={finalValue}
       finishedRolling={finishedRolling}
       finishedRollTransforms={finishedRollTransforms}
@@ -84,15 +75,6 @@ export function PopoverTrays() {
     OBR.party.getPlayers().then(setPlayers);
   }, []);
   useEffect(() => OBR.party.onChange(setPlayers), []);
-
-  function handleTrayOpen(connectionId: string) {
-    if (window.BroadcastChannel) {
-      OBR.action.open();
-      const channel = new BroadcastChannel(getPluginId("focused-tray"));
-      channel.postMessage(connectionId);
-      channel.close();
-    }
-  }
 
   // Update popover size based on visible trays
   const visibleCount = Object.values(visibleTrays).filter(Boolean).length;
@@ -155,7 +137,6 @@ export function PopoverTrays() {
           <MemoPopoverTray
             key={player.connectionId}
             player={player}
-            onOpen={handleTrayOpen}
             onVisibilityChange={(visible) =>
               handleVisibilityChange(player.connectionId, visible)
             }
