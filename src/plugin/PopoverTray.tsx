@@ -43,8 +43,8 @@ export function PopoverTray({
   const theme = useTheme();
 
   return (
-    <Box component="div" position="relative" sx={{ pointerEvents: "all" }}>
-      <Slide in={shown} direction="up">
+    <Slide in={shown} direction="up" mountOnEnter unmountOnExit>
+      <Box component="div" position="relative" sx={{ pointerEvents: "all" }}>
         <Paper
           elevation={8}
           sx={{
@@ -104,7 +104,7 @@ export function PopoverTray({
             {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
           </IconButton>
         </Paper>
-      </Slide>
-    </Box>
+      </Box>
+    </Slide>
   );
 }

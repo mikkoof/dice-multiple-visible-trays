@@ -43,6 +43,8 @@ function MemoizedPopoverTray({
   const shown = !!(
     diceRoll &&
     !diceRoll.hidden &&
+    finishedRollTransforms &&
+    Object.keys(finishedRollTransforms).length > 0 && // Only show when transforms have data
     (pinned || !hideAfter || now < hideAfter)
   );
 
