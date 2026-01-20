@@ -1,5 +1,5 @@
 import OBR, { Player } from "@owlbear-rodeo/sdk";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -7,6 +7,7 @@ import Stack from "@mui/material/Stack";
 import { PopoverTray } from "./PopoverTray";
 import { getPluginId } from "./getPluginId";
 import { usePlayerDice } from "./usePlayerDice";
+import { DiceTransform } from "../types/DiceTransform";
 
 // Layout constants
 const TRAY_WIDTH = 250;
@@ -14,6 +15,11 @@ const TRAY_HEIGHT = 298;
 const TRAY_SPACING = 16;
 const CONTAINER_PADDING = 16;
 const TRAY_AUTO_HIDE_DELAY = 15000;
+
+interface CachedTrayState {
+  finalValue: number | null;
+  finishedRollTransforms: Record<string, DiceTransform>;
+}
 
 function MemoizedPopoverTray({
   player,
@@ -32,12 +38,40 @@ function MemoizedPopoverTray({
   const [hideAfter, setHideAfter] = useState<number | null>(null);
   const [, forceUpdate] = useState(0);
 
+  // Cache the last known good state for pinned trays
+  const cachedStateRef = useRef<CachedTrayState | null>(null);
+
+  // Check if we have valid current data
+  const hasValidData =
+    diceRoll &&
+    !diceRoll.hidden &&
+    finishedRollTransforms &&
+    Object.keys(finishedRollTransforms).length > 0 &&
+    finishedRolling;
+
+  // Update cache when we have valid data
+  useEffect(() => {
+    if (hasValidData && finishedRollTransforms && finalValue !== null) {
+      cachedStateRef.current = {
+        finalValue,
+        finishedRollTransforms,
+      };
+    }
+  }, [hasValidData, finalValue, finishedRollTransforms]);
+
+  // Clear cache when unpinned and tray hides
+  useEffect(() => {
+    if (!pinned && hideAfter && Date.now() >= hideAfter) {
+      cachedStateRef.current = null;
+    }
+  }, [pinned, hideAfter]);
+
   // When a roll finishes or is unpinned, set when it should hide
   useEffect(() => {
-    if (diceRoll && !diceRoll.hidden && finishedRolling && !pinned) {
+    if (hasValidData && !pinned) {
       setHideAfter(Date.now() + TRAY_AUTO_HIDE_DELAY);
     }
-  }, [diceRoll, finishedRolling, pinned]);
+  }, [hasValidData, pinned]);
 
   // Set a timer to trigger re-render when the timeout expires
   useEffect(() => {
@@ -50,14 +84,17 @@ function MemoizedPopoverTray({
     }
   }, [hideAfter, pinned]);
 
-  // Show if there's a roll and either: it's pinned, or we haven't reached hide time yet
+  // Determine what to display - use cache for pinned trays when live data is unavailable
+  const displayFinalValue = hasValidData ? finalValue : cachedStateRef.current?.finalValue ?? null;
+  const displayTransforms = hasValidData
+    ? finishedRollTransforms
+    : cachedStateRef.current?.finishedRollTransforms;
+  const displayFinishedRolling = hasValidData ? finishedRolling : !!cachedStateRef.current;
+
+  // Show if: we have valid data OR (pinned with cached data), and within time window
   const now = Date.now();
-  const shown =
-    diceRoll &&
-    !diceRoll.hidden &&
-    finishedRollTransforms &&
-    Object.keys(finishedRollTransforms).length > 0 &&
-    (pinned || !hideAfter || now < hideAfter);
+  const hasSomethingToShow = hasValidData || (pinned && cachedStateRef.current);
+  const shown = hasSomethingToShow && (pinned || !hideAfter || now < hideAfter);
 
   useEffect(() => {
     onVisibilityChange(!!shown);
@@ -67,9 +104,9 @@ function MemoizedPopoverTray({
     <PopoverTray
       player={player}
       shown={!!shown}
-      finalValue={finalValue}
-      finishedRolling={finishedRolling}
-      finishedRollTransforms={finishedRollTransforms}
+      finalValue={displayFinalValue}
+      finishedRolling={displayFinishedRolling}
+      finishedRollTransforms={displayTransforms}
       onPin={onPin}
       pinned={pinned}
     />
