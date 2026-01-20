@@ -7,7 +7,6 @@ import Slide from "@mui/material/Slide";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
-import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
 
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -24,7 +23,6 @@ import { DiceTransform } from "../types/DiceTransform";
 export function PopoverTray({
   player,
   shown,
-  onClick,
   finalValue,
   finishedRolling,
   finishedRollTransforms,
@@ -33,7 +31,6 @@ export function PopoverTray({
 }: {
   player: Player;
   shown: boolean;
-  onClick: () => void;
   finalValue: number | null;
   finishedRolling: boolean;
   finishedRollTransforms?: Record<string, DiceTransform>;
@@ -59,11 +56,12 @@ export function PopoverTray({
             position: "relative",
           }}
         >
-          <ButtonBase
-            onClick={onClick}
+          <Box
+            component="div"
             sx={{
               width: "100%",
               height: "100%",
+              display: "flex",
               flexDirection: "column",
             }}
           >
@@ -96,7 +94,7 @@ export function PopoverTray({
               {player?.name}
               {finishedRolling && <span> | {finalValue}</span>}
             </Typography>
-          </ButtonBase>
+          </Box>
           <IconButton
             onClick={onPin}
             sx={{ position: "absolute", top: 0, right: 0 }}

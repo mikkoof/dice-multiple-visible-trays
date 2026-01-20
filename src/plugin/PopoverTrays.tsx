@@ -8,6 +8,13 @@ import { PopoverTray } from "./PopoverTray";
 import { getPluginId } from "./getPluginId";
 import { usePlayerDice } from "./usePlayerDice";
 
+// Layout constants
+const TRAY_WIDTH = 250;
+const TRAY_HEIGHT = 298;
+const TRAY_SPACING = 16;
+const CONTAINER_PADDING = 16;
+const TRAY_AUTO_HIDE_DELAY = 15000;
+
 function MemoizedPopoverTray({
   player,
   onVisibilityChange,
@@ -15,7 +22,7 @@ function MemoizedPopoverTray({
   pinned,
 }: {
   player: Player;
-  onVisibilityChange: (visibile: boolean) => void;
+  onVisibilityChange: (visible: boolean) => void;
   onPin: () => void;
   pinned: boolean;
 }) {
@@ -23,40 +30,43 @@ function MemoizedPopoverTray({
     usePlayerDice(player);
 
   const [hideAfter, setHideAfter] = useState<number | null>(null);
+  const [, forceUpdate] = useState(0);
 
-  // When a roll finishes, set when it should hide
+  // When a roll finishes or is unpinned, set when it should hide
   useEffect(() => {
     if (diceRoll && !diceRoll.hidden && finishedRolling && !pinned) {
-      setHideAfter(Date.now() + 15000);
+      setHideAfter(Date.now() + TRAY_AUTO_HIDE_DELAY);
     }
   }, [diceRoll, finishedRolling, pinned]);
 
-  // Reset hide timer when unpinned while visible
+  // Set a timer to trigger re-render when the timeout expires
   useEffect(() => {
-    if (!pinned && diceRoll && !diceRoll.hidden && finishedRolling) {
-      setHideAfter(Date.now() + 15000);
+    if (hideAfter && !pinned) {
+      const timeRemaining = hideAfter - Date.now();
+      if (timeRemaining > 0) {
+        const timer = setTimeout(() => forceUpdate((n) => n + 1), timeRemaining);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [pinned, diceRoll, finishedRolling]);
+  }, [hideAfter, pinned]);
 
   // Show if there's a roll and either: it's pinned, or we haven't reached hide time yet
   const now = Date.now();
-  const shown = !!(
+  const shown =
     diceRoll &&
     !diceRoll.hidden &&
     finishedRollTransforms &&
-    Object.keys(finishedRollTransforms).length > 0 && // Only show when transforms have data
-    (pinned || !hideAfter || now < hideAfter)
-  );
+    Object.keys(finishedRollTransforms).length > 0 &&
+    (pinned || !hideAfter || now < hideAfter);
 
   useEffect(() => {
-    onVisibilityChange(shown);
+    onVisibilityChange(!!shown);
   }, [shown, onVisibilityChange]);
 
   return (
     <PopoverTray
       player={player}
-      shown={shown}
-      onClick={() => {}}
+      shown={!!shown}
       finalValue={finalValue}
       finishedRolling={finishedRolling}
       finishedRollTransforms={finishedRollTransforms}
@@ -86,35 +96,30 @@ export function PopoverTrays() {
       OBR.popover.setHeight(getPluginId("popover"), 0);
       OBR.popover.setWidth(getPluginId("popover"), 0);
     } else {
-      // Height = Tray + Name + Bottom
-      OBR.popover.setHeight(getPluginId("popover"), 298);
-      // Width = (Tray * Number of trays) + (Spacing * (Number of trays - 1)) + (Padding * 2)
+      OBR.popover.setHeight(getPluginId("popover"), TRAY_HEIGHT);
       OBR.popover.setWidth(
         getPluginId("popover"),
-        250 * visibleCount + 16 * (visibleCount - 1) + 16 * 2
+        TRAY_WIDTH * visibleCount +
+          TRAY_SPACING * (visibleCount - 1) +
+          CONTAINER_PADDING * 2
       );
     }
   }, [visibleCount]);
 
   const handleVisibilityChange = useCallback(
     (connectionId: string, visible: boolean) => {
-      setVisibleTrays((v) => {
-        const newValue = { ...v, [connectionId]: visible };
-        return newValue;
-      });
+      setVisibleTrays((v) => ({ ...v, [connectionId]: visible }));
     },
     []
   );
 
-  function handlePin(connectionId: string) {
-    setPinnedTrays((pinned) => {
-      if (pinned.includes(connectionId)) {
-        return pinned.filter((id) => id !== connectionId);
-      } else {
-        return [...pinned, connectionId];
-      }
-    });
-  }
+  const handlePin = useCallback((connectionId: string) => {
+    setPinnedTrays((pinned) =>
+      pinned.includes(connectionId)
+        ? pinned.filter((id) => id !== connectionId)
+        : [...pinned, connectionId]
+    );
+  }, []);
 
   return (
     <Box
