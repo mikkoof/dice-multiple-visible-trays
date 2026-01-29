@@ -57,8 +57,16 @@ export function DiceRoll({
     }
   }, [finishedTransforms]);
 
+  // DEBUG
+  console.log("DiceRoll render:", {
+    diceCount: dice?.length,
+    finishedTransforms: finishedTransforms ? "defined" : "undefined",
+    paused,
+  });
+
   if (finishedTransforms) {
     // Move to a static dice representation when all dice values have been found
+    console.log("DiceRoll: rendering STATIC mode");
     return (
       <group>
         {dice?.map((die) => {
@@ -83,6 +91,11 @@ export function DiceRoll({
     // We need to re-create the physics world on every new roll as the dice
     // networking relies on the deterministic nature of Rapier when given the
     // same inputs and using the same number of update timesteps.
+    console.log("DiceRoll: rendering PHYSICS mode");
+    dice?.forEach((die) => {
+      const fixedTransform = transformsRef?.current?.[die.id];
+      console.log(`  Die ${die.id}: fixedTransform=${fixedTransform ? "YES" : "NO"}, hasThrow=${!!rollThrows[die.id]}`);
+    });
     return (
       <Physics
         colliders={false}
