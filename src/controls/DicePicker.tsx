@@ -15,8 +15,10 @@ export function DicePicker() {
   );
   const clearRoll = useDiceRollStore((state) => state.clearRoll);
   const roll = useDiceRollStore((state) => state.roll);
+  const addMode = useDiceControlsStore((state) => state.addMode);
   function clearRollIfNeeded() {
-    if (roll) {
+    // Don't clear roll when in add mode - we want to keep existing dice
+    if (roll && !addMode) {
       clearRoll();
     }
   }

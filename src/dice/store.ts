@@ -123,6 +123,17 @@ export const useDiceRollStore = create<DiceRollState>()(
   }))
 );
 
+// DEBUG: Subscribe to track all roll state changes
+useDiceRollStore.subscribe((state, prevState) => {
+  if (state.roll !== prevState.roll) {
+    console.log("ROLL STATE CHANGED:", {
+      prevRoll: prevState.roll ? `exists (${prevState.roll.dice.length} dice)` : "null",
+      newRoll: state.roll ? `exists (${state.roll.dice.length} dice)` : "null",
+    });
+    console.trace("Roll change stack trace");
+  }
+});
+
 /** Recursively update the ids of a draft to reroll dice */
 function rerollDraft(
   diceRoll: WritableDraft<DiceRoll>,
