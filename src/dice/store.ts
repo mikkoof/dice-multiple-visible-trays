@@ -42,7 +42,8 @@ export const useDiceRollStore = create<DiceRollState>()(
     rollValues: {},
     rollTransforms: {},
     rollThrows: {},
-    startRoll: (roll, speedMultiplier?: number) =>
+    startRoll: (roll, speedMultiplier?: number) => {
+      console.log("startRoll called with", roll.dice.length, "dice");
       set((state) => {
         state.roll = roll;
         state.rollValues = {};
@@ -55,14 +56,18 @@ export const useDiceRollStore = create<DiceRollState>()(
           state.rollTransforms[die.id] = null;
           state.rollThrows[die.id] = getRandomDiceThrow(speedMultiplier);
         }
-      }),
-    clearRoll: () =>
+      });
+    },
+    clearRoll: () => {
+      console.log("clearRoll called");
+      console.trace("clearRoll stack trace");
       set((state) => {
         state.roll = null;
         state.rollValues = {};
         state.rollTransforms = {};
         state.rollThrows = {};
-      }),
+      });
+    },
     reroll: (ids, manualThrows) => {
       set((state) => {
         if (state.roll) {
