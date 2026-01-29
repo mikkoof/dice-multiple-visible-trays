@@ -19,6 +19,7 @@ import { Tray } from "../tray/Tray";
 import { TraySuspense } from "../tray/TraySuspense";
 import { AnimatedPlayerCamera } from "./AnimatedPlayerCamera";
 import { DiceTransform } from "../types/DiceTransform";
+import { PopoverHoverProvider, usePopoverHover } from "./PopoverHoverContext";
 
 export function PopoverTray({
   player,
@@ -37,7 +38,41 @@ export function PopoverTray({
   onPin: () => void;
   pinned: boolean;
 }) {
+  return (
+    <PopoverHoverProvider>
+      <PopoverTrayInner
+        player={player}
+        shown={shown}
+        finalValue={finalValue}
+        finishedRolling={finishedRolling}
+        finishedRollTransforms={finishedRollTransforms}
+        onPin={onPin}
+        pinned={pinned}
+      />
+    </PopoverHoverProvider>
+  );
+}
+
+function PopoverTrayInner({
+  player,
+  shown,
+  finalValue,
+  finishedRolling,
+  finishedRollTransforms,
+  onPin,
+  pinned,
+}: {
+  player: Player;
+  shown: boolean;
+  finalValue: number | null;
+  finishedRolling: boolean;
+  finishedRollTransforms?: Record<string, DiceTransform>;
+  onPin: () => void;
+  pinned: boolean;
+}) {
   const theme = useTheme();
+  const popoverHover = usePopoverHover();
+  const hoveredValue = popoverHover?.hoveredValue;
 
   return (
     <Slide in={shown} direction="up" mountOnEnter unmountOnExit>
@@ -93,6 +128,9 @@ export function PopoverTray({
             >
               {player?.name}
               {finishedRolling && <span> | {finalValue}</span>}
+              {hoveredValue !== null && hoveredValue !== undefined && (
+                <span> | {hoveredValue}</span>
+              )}
             </Typography>
           </Box>
           <IconButton

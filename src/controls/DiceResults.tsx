@@ -44,19 +44,19 @@ export function DiceResults({
           onClick={() => onExpand(!expanded)}
           color="inherit"
         >
-          <Typography variant="h4" color="white">
-            {finalValue}
+          <Stack direction="row" alignItems="baseline" gap={1}>
+            <Typography variant="h4" color="white">
+              {finalValue}
+            </Typography>
             {hoveredValue !== null && hoveredValue !== undefined && (
               <Typography
-                component="span"
                 variant="h5"
                 color="rgba(255, 255, 255, 0.7)"
-                sx={{ ml: 1 }}
               >
                 [{hoveredValue}]
               </Typography>
             )}
-          </Typography>
+          </Stack>
         </Button>
       </Tooltip>
       <Grow
