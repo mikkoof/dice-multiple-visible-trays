@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { DiceTransform } from "../types/DiceTransform";
 import { DiceRoll } from "./DiceRoll";
 import { InteractiveDice } from "./InteractiveDice";
@@ -18,16 +18,12 @@ export function InteractiveDiceRoll() {
     return state.rollTransforms as Record<string, DiceTransform>;
   });
 
-  const transformsRef = useRef<Record<string, DiceTransform | null> | null>(
-    null
+  const rollTransforms = useDiceRollStore((state) => state.rollTransforms);
+  const transformsRef = useRef<Record<string, DiceTransform | null>>(
+    rollTransforms
   );
-  useEffect(
-    () =>
-      useDiceRollStore.subscribe((state) => {
-        transformsRef.current = state.rollTransforms;
-      }),
-    []
-  );
+  // Keep ref in sync with state
+  transformsRef.current = rollTransforms;
 
   if (!roll) {
     return null;
