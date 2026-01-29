@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
 import Grow from "@mui/material/Grow";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
@@ -44,7 +45,7 @@ export function DiceResults({
           onClick={() => onExpand(!expanded)}
           color="inherit"
         >
-          <Stack direction="row" alignItems="baseline" gap={1}>
+          <Box component="span" sx={{ position: "relative", display: "inline-flex", alignItems: "baseline" }}>
             <Typography variant="h4" color="white">
               {finalValue}
             </Typography>
@@ -52,11 +53,17 @@ export function DiceResults({
               <Typography
                 variant="h5"
                 color="rgba(255, 255, 255, 0.7)"
+                sx={{
+                  position: "absolute",
+                  left: "100%",
+                  marginLeft: "8px",
+                  whiteSpace: "nowrap"
+                }}
               >
                 [{hoveredValue}]
               </Typography>
             )}
-          </Stack>
+          </Box>
         </Button>
       </Tooltip>
       <Grow
