@@ -25,15 +25,6 @@ export function InteractiveDiceRoll() {
   // Keep ref in sync with state
   transformsRef.current = rollTransforms;
 
-  // DEBUG
-  console.log("InteractiveDiceRoll render:", {
-    hasRoll: !!roll,
-    rollDiceCount: roll?.dice?.length,
-    finishedTransforms: finishedTransforms ? Object.keys(finishedTransforms).length : "undefined",
-    rollTransformsKeys: Object.keys(rollTransforms),
-    rollThrowsKeys: Object.keys(rollThrows),
-  });
-
   if (!roll) {
     return null;
   }

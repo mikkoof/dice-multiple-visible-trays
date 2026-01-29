@@ -42,8 +42,7 @@ export const useDiceRollStore = create<DiceRollState>()(
     rollValues: {},
     rollTransforms: {},
     rollThrows: {},
-    startRoll: (roll, speedMultiplier?: number) => {
-      console.log("startRoll called with", roll.dice.length, "dice");
+    startRoll: (roll, speedMultiplier?: number) =>
       set((state) => {
         state.roll = roll;
         state.rollValues = {};
@@ -56,18 +55,14 @@ export const useDiceRollStore = create<DiceRollState>()(
           state.rollTransforms[die.id] = null;
           state.rollThrows[die.id] = getRandomDiceThrow(speedMultiplier);
         }
-      });
-    },
-    clearRoll: () => {
-      console.log("clearRoll called");
-      console.trace("clearRoll stack trace");
+      }),
+    clearRoll: () =>
       set((state) => {
         state.roll = null;
         state.rollValues = {};
         state.rollTransforms = {};
         state.rollThrows = {};
-      });
-    },
+      }),
     reroll: (ids, manualThrows) => {
       set((state) => {
         if (state.roll) {
@@ -89,17 +84,10 @@ export const useDiceRollStore = create<DiceRollState>()(
       });
     },
     addDiceToRoll: (newDice, speedMultiplier, bonus = 0) => {
-      console.log("addDiceToRoll called:", { newDiceCount: newDice.length, speedMultiplier, bonus });
       set((state) => {
         if (!state.roll) {
-          console.log("addDiceToRoll: no roll exists!");
           return;
         }
-        console.log("addDiceToRoll before:", {
-          rollDiceCount: state.roll.dice.length,
-          rollValuesKeys: Object.keys(state.rollValues),
-          rollTransformsKeys: Object.keys(state.rollTransforms),
-        });
         // Append new dice to existing roll
         state.roll.dice.push(...newDice);
         // Add bonus to existing roll bonus
@@ -113,26 +101,10 @@ export const useDiceRollStore = create<DiceRollState>()(
           state.rollTransforms[die.id] = null;
           state.rollThrows[die.id] = getRandomDiceThrow(speedMultiplier);
         }
-        console.log("addDiceToRoll after:", {
-          rollDiceCount: state.roll.dice.length,
-          rollValuesKeys: Object.keys(state.rollValues),
-          rollTransformsKeys: Object.keys(state.rollTransforms),
-        });
       });
     },
   }))
 );
-
-// DEBUG: Subscribe to track all roll state changes
-useDiceRollStore.subscribe((state, prevState) => {
-  if (state.roll !== prevState.roll) {
-    console.log("ROLL STATE CHANGED:", {
-      prevRoll: prevState.roll ? `exists (${prevState.roll.dice.length} dice)` : "null",
-      newRoll: state.roll ? `exists (${state.roll.dice.length} dice)` : "null",
-    });
-    console.trace("Roll change stack trace");
-  }
-});
 
 /** Recursively update the ids of a draft to reroll dice */
 function rerollDraft(

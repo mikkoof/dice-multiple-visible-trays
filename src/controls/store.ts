@@ -123,7 +123,6 @@ export const useDiceControlsStore = create<DiceControlsState>()(
       });
     },
     enterAddMode() {
-      console.log("enterAddMode called");
       set((state) => {
         state.addMode = true;
         // Reset dice selection to defaults when entering add mode

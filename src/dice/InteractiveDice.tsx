@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSpring, animated, config } from "@react-spring/three";
 import { ThreeEvent, useThree } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 
 import { Die } from "../types/Die";
@@ -31,8 +32,12 @@ export function InteractiveDice(
 ) {
   const diceRef = useRef<THREE.Group>(null);
   const [dragAnchor, setDragAnchor] = useState<DiceVector3 | null>(null);
+  const [hovered, setHovered] = useState(false);
 
   const { invalidate, camera, size } = useThree();
+
+  // Get the die value from the store
+  const value = useDiceRollStore((state) => state.rollValues[props.die.id]);
 
   const pointerDownPositionRef = useRef({ x: 0, y: 0 });
   /** Keep a history of previous drag positions so we can calculate the throw direction and speed */
@@ -180,9 +185,50 @@ export function InteractiveDice(
     config: dragAnchor ? config.wobbly : config.stiff,
   });
 
+  const handlePointerEnter = useCallback(() => {
+    setHovered(true);
+    document.body.style.cursor = "grab";
+  }, []);
+
+  const handlePointerLeave = useCallback(() => {
+    setHovered(false);
+    document.body.style.cursor = "auto";
+  }, []);
+
   return (
     <animated.group position={position}>
-      <Dice onPointerDown={handlePointerDown} ref={diceRef} {...props}></Dice>
+      <Dice
+        onPointerDown={handlePointerDown}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        ref={diceRef}
+        {...props}
+      />
+      {hovered && value !== null && !dragAnchor && (
+        <Html
+          center
+          position={[0, 0.4, 0]}
+          style={{
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(0, 0, 0, 0.8)",
+              color: "white",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontSize: "14px",
+              fontWeight: "bold",
+              fontFamily: "Roboto, sans-serif",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {value}
+          </div>
+        </Html>
+      )}
     </animated.group>
   );
 }
