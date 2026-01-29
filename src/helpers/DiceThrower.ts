@@ -99,8 +99,41 @@ export function randomAngularVelocity(): DiceVector3 {
   };
 }
 
-export function getRandomDiceThrow(speedMultiplier?: number): DiceThrow {
-  const position = randomPosition();
+/** Minimum distance between dice to avoid overlap */
+const MIN_DICE_DISTANCE = 0.25;
+
+function isPositionValidForExisting(
+  position: DiceVector3,
+  existingPositions: DiceVector3[]
+): boolean {
+  for (const existing of existingPositions) {
+    const dx = position.x - existing.x;
+    const dy = position.y - existing.y;
+    const dz = position.z - existing.z;
+    const distanceSquared = dx * dx + dy * dy + dz * dz;
+    if (distanceSquared < MIN_DICE_DISTANCE * MIN_DICE_DISTANCE) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function getRandomDiceThrow(
+  speedMultiplier?: number,
+  existingPositions?: DiceVector3[]
+): DiceThrow {
+  let position = randomPosition();
+
+  // Try to find a position that doesn't overlap with existing dice
+  if (existingPositions && existingPositions.length > 0) {
+    for (let i = 0; i < 50; i++) {
+      if (isPositionValidForExisting(position, existingPositions)) {
+        break;
+      }
+      position = randomPosition();
+    }
+  }
+
   const rotation = randomRotation();
   const linearVelocity = randomLinearVelocity(position, speedMultiplier);
   const angularVelocity = randomAngularVelocity();

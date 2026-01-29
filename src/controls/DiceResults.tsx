@@ -12,6 +12,7 @@ import { DiceRoll } from "../types/DiceRoll";
 import { Die, isDie } from "../types/Die";
 import { Dice, isDice } from "../types/Dice";
 import { DicePreview } from "../previews/DicePreview";
+import { useDiceRollStore } from "../dice/store";
 
 export function DiceResults({
   diceRoll,
@@ -28,6 +29,10 @@ export function DiceResults({
     return getCombinedDiceValue(diceRoll, rollValues);
   }, [diceRoll, rollValues]);
 
+  // Get the hovered die value
+  const hoveredDieId = useDiceRollStore((state) => state.hoveredDieId);
+  const hoveredValue = hoveredDieId ? rollValues[hoveredDieId] : null;
+
   return (
     <Stack alignItems="center" maxHeight="calc(100vh - 100px)">
       <Tooltip
@@ -41,6 +46,16 @@ export function DiceResults({
         >
           <Typography variant="h4" color="white">
             {finalValue}
+            {hoveredValue !== null && hoveredValue !== undefined && (
+              <Typography
+                component="span"
+                variant="h5"
+                color="rgba(255, 255, 255, 0.7)"
+                sx={{ ml: 1 }}
+              >
+                [{hoveredValue}]
+              </Typography>
+            )}
           </Typography>
         </Button>
       </Tooltip>

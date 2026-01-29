@@ -27,6 +27,8 @@ interface DiceRollState {
    * A mapping from the die ID to its initial roll throw state.
    */
   rollThrows: Record<string, DiceThrow>;
+  /** The ID of the die currently being hovered (for showing value in results) */
+  hoveredDieId: string | null;
   startRoll: (roll: DiceRoll, speedMultiplier?: number) => void;
   clearRoll: (ids?: string) => void;
   /** Reroll select ids of dice or reroll all dice by passing `undefined` */
@@ -34,6 +36,7 @@ interface DiceRollState {
   finishDieRoll: (id: string, number: number, transform: DiceTransform) => void;
   /** Add new dice to existing roll while keeping settled dice fixed */
   addDiceToRoll: (newDice: (Die | Dice)[], speedMultiplier?: number, bonus?: number) => void;
+  setHoveredDie: (id: string | null) => void;
 }
 
 export const useDiceRollStore = create<DiceRollState>()(
@@ -42,6 +45,7 @@ export const useDiceRollStore = create<DiceRollState>()(
     rollValues: {},
     rollTransforms: {},
     rollThrows: {},
+    hoveredDieId: null,
     startRoll: (roll, speedMultiplier?: number) =>
       set((state) => {
         state.roll = roll;
@@ -62,6 +66,11 @@ export const useDiceRollStore = create<DiceRollState>()(
         state.rollValues = {};
         state.rollTransforms = {};
         state.rollThrows = {};
+        state.hoveredDieId = null;
+      }),
+    setHoveredDie: (id) =>
+      set((state) => {
+        state.hoveredDieId = id;
       }),
     reroll: (ids, manualThrows) => {
       set((state) => {
@@ -88,6 +97,11 @@ export const useDiceRollStore = create<DiceRollState>()(
         if (!state.roll) {
           return;
         }
+        // Collect existing dice positions to avoid spawning on top of them
+        const existingPositions = Object.values(state.rollTransforms)
+          .filter((t): t is DiceTransform => t !== null)
+          .map((t) => t.position);
+
         // Append new dice to existing roll
         state.roll.dice.push(...newDice);
         // Add bonus to existing roll bonus
@@ -95,11 +109,15 @@ export const useDiceRollStore = create<DiceRollState>()(
           state.roll.bonus = (state.roll.bonus || 0) + bonus;
         }
         // Generate throws and initialize state only for new dice
+        // Track new positions to avoid new dice overlapping each other
         const dice = getDieFromDice({ dice: newDice });
         for (const die of dice) {
           state.rollValues[die.id] = null;
           state.rollTransforms[die.id] = null;
-          state.rollThrows[die.id] = getRandomDiceThrow(speedMultiplier);
+          const diceThrow = getRandomDiceThrow(speedMultiplier, existingPositions);
+          state.rollThrows[die.id] = diceThrow;
+          // Add this new die's spawn position to avoid future dice overlapping
+          existingPositions.push(diceThrow.position);
         }
       });
     },
