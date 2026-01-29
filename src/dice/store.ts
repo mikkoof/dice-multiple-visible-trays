@@ -3,8 +3,8 @@ import { immer } from "zustand/middleware/immer";
 import { WritableDraft } from "immer/dist/types/types-external";
 
 import { DiceRoll } from "../types/DiceRoll";
-import { isDie } from "../types/Die";
-import { isDice } from "../types/Dice";
+import { isDie, Die } from "../types/Die";
+import { isDice, Dice } from "../types/Dice";
 import { getDieFromDice } from "../helpers/getDieFromDice";
 import { DiceTransform } from "../types/DiceTransform";
 import { getRandomDiceThrow } from "../helpers/DiceThrower";
@@ -32,6 +32,8 @@ interface DiceRollState {
   /** Reroll select ids of dice or reroll all dice by passing `undefined` */
   reroll: (ids?: string[], manualThrows?: Record<string, DiceThrow>) => void;
   finishDieRoll: (id: string, number: number, transform: DiceTransform) => void;
+  /** Add new dice to existing roll while keeping settled dice fixed */
+  addDiceToRoll: (newDice: (Die | Dice)[], speedMultiplier?: number, bonus?: number) => void;
 }
 
 export const useDiceRollStore = create<DiceRollState>()(
@@ -79,6 +81,26 @@ export const useDiceRollStore = create<DiceRollState>()(
       set((state) => {
         state.rollValues[id] = number;
         state.rollTransforms[id] = transform;
+      });
+    },
+    addDiceToRoll: (newDice, speedMultiplier, bonus = 0) => {
+      set((state) => {
+        if (!state.roll) {
+          return;
+        }
+        // Append new dice to existing roll
+        state.roll.dice.push(...newDice);
+        // Add bonus to existing roll bonus
+        if (bonus !== 0) {
+          state.roll.bonus = (state.roll.bonus || 0) + bonus;
+        }
+        // Generate throws and initialize state only for new dice
+        const dice = getDieFromDice({ dice: newDice });
+        for (const die of dice) {
+          state.rollValues[die.id] = null;
+          state.rollTransforms[die.id] = null;
+          state.rollThrows[die.id] = getRandomDiceThrow(speedMultiplier);
+        }
       });
     },
   }))

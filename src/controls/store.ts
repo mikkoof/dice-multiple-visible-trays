@@ -19,6 +19,7 @@ interface DiceControlsState {
   diceHidden: boolean;
   diceRollPressTime: number | null;
   fairnessTesterOpen: boolean;
+  addMode: boolean;
   changeDiceSet: (diceSet: DiceSet) => void;
   resetDiceCounts: () => void;
   changeDieCount: (id: string, count: number) => void;
@@ -29,6 +30,8 @@ interface DiceControlsState {
   toggleDiceHidden: () => void;
   setDiceRollPressTime: (time: number | null) => void;
   toggleFairnessTester: () => void;
+  enterAddMode: () => void;
+  exitAddMode: () => void;
 }
 
 const initialSet = diceSets[0];
@@ -46,6 +49,7 @@ export const useDiceControlsStore = create<DiceControlsState>()(
     diceHidden: false,
     diceRollPressTime: null,
     fairnessTesterOpen: false,
+    addMode: false,
     changeDiceSet(diceSet) {
       set((state) => {
         const counts: DiceCounts = {};
@@ -116,6 +120,20 @@ export const useDiceControlsStore = create<DiceControlsState>()(
     toggleFairnessTester() {
       set((state) => {
         state.fairnessTesterOpen = !state.fairnessTesterOpen;
+      });
+    },
+    enterAddMode() {
+      set((state) => {
+        state.addMode = true;
+        // Reset dice selection to defaults when entering add mode
+        state.diceCounts = state.defaultDiceCounts;
+        state.diceBonus = 0;
+        state.diceAdvantage = null;
+      });
+    },
+    exitAddMode() {
+      set((state) => {
+        state.addMode = false;
       });
     },
   }))

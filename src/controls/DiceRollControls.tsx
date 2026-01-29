@@ -13,6 +13,7 @@ import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import HiddenIcon from "@mui/icons-material/VisibilityOffRounded";
 import RollIcon from "@mui/icons-material/ArrowForwardRounded";
+import AddIcon from "@mui/icons-material/AddRounded";
 
 import { RerollDiceIcon } from "../icons/RerollDiceIcon";
 
@@ -40,6 +41,7 @@ export function DiceRollControls() {
   const counts = useDiceControlsStore((state) => state.diceCounts);
   const bonus = useDiceControlsStore((state) => state.diceBonus);
   const advantage = useDiceControlsStore((state) => state.diceAdvantage);
+  const addMode = useDiceControlsStore((state) => state.addMode);
   // Is currently the default dice state (all counts 0 and advantage/bonus defaults)
   const isDefault = useMemo(
     () =>
@@ -61,7 +63,8 @@ export function DiceRollControls() {
     }
   }, [rollValues]);
 
-  if (!isDefault) {
+  // Show DicePickedControls when dice are selected OR when in add mode (even with default selection)
+  if (!isDefault || addMode) {
     return (
       <Fade in>
         <span>
@@ -84,6 +87,7 @@ export function DiceRollControls() {
 
 function DicePickedControls() {
   const startRoll = useDiceRollStore((state) => state.startRoll);
+  const addDiceToRoll = useDiceRollStore((state) => state.addDiceToRoll);
 
   const defaultDiceCounts = useDiceControlsStore(
     (state) => state.defaultDiceCounts
@@ -95,6 +99,8 @@ function DicePickedControls() {
   const setBonus = useDiceControlsStore((state) => state.setDiceBonus);
   const advantage = useDiceControlsStore((state) => state.diceAdvantage);
   const setAdvantage = useDiceControlsStore((state) => state.setDiceAdvantage);
+  const addMode = useDiceControlsStore((state) => state.addMode);
+  const exitAddMode = useDiceControlsStore((state) => state.exitAddMode);
 
   const resetDiceCounts = useDiceControlsStore(
     (state) => state.resetDiceCounts
@@ -107,7 +113,15 @@ function DicePickedControls() {
       const dice = getDiceToRoll(counts, advantage, diceById);
       const activeTimeSeconds = (performance.now() - rollPressTime) / 1000;
       const speedMultiplier = Math.max(1, Math.min(10, activeTimeSeconds * 2));
-      startRoll({ dice, bonus, hidden }, speedMultiplier);
+
+      if (addMode) {
+        // In add mode, add dice to existing roll
+        addDiceToRoll(dice, speedMultiplier, bonus);
+        exitAddMode();
+      } else {
+        // Normal roll
+        startRoll({ dice, bonus, hidden }, speedMultiplier);
+      }
 
       const rolledDiceById: Record<string, Die> = {};
       for (const id of Object.keys(counts)) {
@@ -126,6 +140,9 @@ function DicePickedControls() {
     resetDiceCounts();
     setBonus(0);
     setAdvantage(null);
+    if (addMode) {
+      exitAddMode();
+    }
   }
 
   const rollPressTime = useDiceControlsStore(
@@ -310,6 +327,8 @@ function FinishedRollControls() {
   const clearRoll = useDiceRollStore((state) => state.clearRoll);
   const reroll = useDiceRollStore((state) => state.reroll);
 
+  const enterAddMode = useDiceControlsStore((state) => state.enterAddMode);
+
   const rollValues = useDiceRollStore((state) => state.rollValues);
   const finishedRollValues = useMemo(() => {
     const values: Record<string, number> = {};
@@ -343,14 +362,24 @@ function FinishedRollControls() {
           width="100%"
           alignItems="start"
         >
-          <Tooltip title="Reroll" sx={{ pointerEvents: "all" }}>
-            <IconButton
-              onClick={() => reroll()}
-              sx={{ pointerEvents: "all", color: "white" }}
-            >
-              <RerollDiceIcon />
-            </IconButton>
-          </Tooltip>
+          <Stack direction="row" gap={1}>
+            <Tooltip title="Reroll" sx={{ pointerEvents: "all" }}>
+              <IconButton
+                onClick={() => reroll()}
+                sx={{ pointerEvents: "all", color: "white" }}
+              >
+                <RerollDiceIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Add Dice" sx={{ pointerEvents: "all" }}>
+              <IconButton
+                onClick={() => enterAddMode()}
+                sx={{ pointerEvents: "all", color: "white" }}
+              >
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
           <Tooltip title="Clear" sx={{ pointerEvents: "all" }}>
             <IconButton
               onClick={() => clearRoll()}
